@@ -28,6 +28,7 @@ pip install -r requirements.txt
 ```
 
 3. Run the app locally:
+
 ```bash
 python app.py
 # Visit http://127.0.0.1:5000/ in your browser

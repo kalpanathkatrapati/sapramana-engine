@@ -1,32 +1,25 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Horolens - Birth Chart Generator</title>
-    <style>
-        body { font-family: Arial, sans-serif; max-width: 600px; margin: 50px auto; }
-        h1 { color: #333; }
-        form { display: flex; flex-direction: column; gap: 15px; }
-        input { padding: 10px; font-size: 16px; }
-        button { padding: 12px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; }
-        button:hover { background-color: #0056b3; }
-        label { font-weight: bold; }
-    </style>
+  <title>HoroLens - South Indian Horoscope</title>
+  <style>
+    body { font-family: Arial; margin: 50px; background: #f7f7f7; }
+    form { background: #fff; padding: 20px; border-radius: 8px; width: 400px; margin: auto; }
+    input, button { width: 100%; padding: 8px; margin: 10px 0; }
+    button { background: #0078d7; color: white; border: none; cursor: pointer; }
+    button:hover { background: #005fa3; }
+  </style>
 </head>
 <body>
-    <h1>Horolens - Generate Birth Chart</h1>
-    <form method="POST" action="/result">
-        <label for="dob">Date of Birth (YYYY-MM-DD):</label>
-        <input type="text" id="dob" name="dob" placeholder="1983-01-01" required>
-        
-        <label for="tob">Time of Birth (HH:MM):</label>
-        <input type="text" id="tob" name="tob" placeholder="05:48" required>
-        
-        <label for="place">Place of Birth:</label>
-        <input type="text" id="place" name="place" placeholder="New York" required>
-        
-        <button type="submit">Generate Chart</button>
-    </form>
+  <h2 align="center">🔯 HoroLens - South Indian Horoscope</h2>
+  <form method="POST" action="/result">
+    <label>Date of Birth:</label>
+    <input type="date" name="dob" required>
+    <label>Time of Birth (24h):</label>
+    <input type="time" name="tob" required>
+    <label>Place of Birth:</label>
+    <input type="text" name="place" placeholder="e.g. Chennai, India" required>
+    <button type="submit">Generate Horoscope</button>
+  </form>
 </body>
 </html>
