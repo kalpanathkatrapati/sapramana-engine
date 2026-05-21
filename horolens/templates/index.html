@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Horolens - Birth Chart Generator</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 600px; margin: 50px auto; }
+        h1 { color: #333; }
+        form { display: flex; flex-direction: column; gap: 15px; }
+        input { padding: 10px; font-size: 16px; }
+        button { padding: 12px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; }
+        button:hover { background-color: #0056b3; }
+        label { font-weight: bold; }
+    </style>
+</head>
+<body>
+    <h1>Horolens - Generate Birth Chart</h1>
+    <form method="POST" action="/result">
+        <label for="dob">Date of Birth (YYYY-MM-DD):</label>
+        <input type="text" id="dob" name="dob" placeholder="1983-01-01" required>
+        
+        <label for="tob">Time of Birth (HH:MM):</label>
+        <input type="text" id="tob" name="tob" placeholder="05:48" required>
+        
+        <label for="place">Place of Birth:</label>
+        <input type="text" id="place" name="place" placeholder="New York" required>
+        
+        <button type="submit">Generate Chart</button>
+    </form>
+</body>
+</html>

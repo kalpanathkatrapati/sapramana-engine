@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Birth Chart - {{ place }}</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 900px; margin: 20px auto; padding: 20px; background-color: #f5f5f5; }
+        h1, h2 { color: #333; }
+        .birth-info { background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .birth-info p { margin: 10px 0; }
+        .charts { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 20px 0; }
+        .chart-box { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .chart-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 15px; }
+        .sign-box { border: 1px solid #ddd; padding: 10px; border-radius: 4px; text-align: center; background: #f9f9f9; }
+        .sign-box strong { display: block; margin-bottom: 8px; color: #007bff; }
+        .planets { font-size: 24px; font-weight: bold; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; background: white; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
+        th { background-color: #007bff; color: white; }
+        tr:hover { background-color: #f0f0f0; }
+        .dasha-list { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .dasha-item { padding: 15px; border-left: 4px solid #007bff; margin-bottom: 10px; background: #f9f9f9; }
+        .dasha-item strong { color: #333; }
+        .actions { margin-top: 30px; display: flex; gap: 10px; }
+        a, button { padding: 12px 20px; background-color: #007bff; color: white; text-decoration: none; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; }
+        a:hover, button:hover { background-color: #0056b3; }
+        .button-secondary { background-color: #6c757d; }
+        .button-secondary:hover { background-color: #5a6268; }
+    </style>
+</head>
+<body>
+    <h1>Birth Chart - {{ place }}</h1>
+    
+    <div class="birth-info">
+        <h2>Birth Details</h2>
+        <p><strong>Place:</strong> {{ place }}</p>
+        <p><strong>Date of Birth:</strong> {{ dob }}</p>
+        <p><strong>Time of Birth:</strong> {{ tob }}</p>
+        <p><strong>Timezone:</strong> {{ tz }}</p>
+        <p><strong>Lagna (Ascendant):</strong> {{ lagna }}</p>
+    </div>
+
+    <div class="charts">
+        <div class="chart-box">
+            <h2>Rasi Chart (D1)</h2>
+            <div class="chart-grid">
+                {% for sign in ord %}
+                    <div class="sign-box">
+                        <strong>{{ sign }}</strong>
+                        <div class="planets">
+                            {% if sign in rasi and rasi[sign]|length > 0 %}
+                                {% for symbol in rasi[sign] %}{{ symbol }}{% endfor %}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="chart-box">
+            <h2>Navamsa Chart (D9)</h2>
+            <div class="chart-grid">
+                {% for sign in ord %}
+                    <div class="sign-box">
+                        <strong>{{ sign }}</strong>
+                        <div class="planets">
+                            {% if sign in nav and nav[sign]|length > 0 %}
+                                {% for symbol in nav[sign] %}{{ symbol }}{% endfor %}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <div class="chart-box">
+        <h2>Planetary Positions</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Planet</th>
+                    <th>Longitude</th>
+                    <th>Sign</th>
+                    <th>Nakshatra</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for planet, lon, sign, nak in planet_table %}
+                <tr>
+                    <td>{{ planet }}</td>
+                    <td>{{ lon }}°</td>
+                    <td>{{ sign }}</td>
+                    <td>{{ nak }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="dasha-list">
+        <h2>Vimsottari Dasha Periods</h2>
+        {% for lord, start_date, end_date, antardasha in dasha %}
+            <div class="dasha-item">
+                <strong>{{ lord }}: {{ start_date }} to {{ end_date }}</strong>
+                <ul style="margin: 8px 0; padding-left: 20px;">
+                    {% for anti_lord, anti_start, anti_end in antardasha %}
+                        <li>{{ anti_lord }}: {{ anti_start }} to {{ anti_end }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        {% endfor %}
+    </div>
+
+    <div class="actions">
+        <a href="/" class="button-secondary">← Back</a>
+        <a href="/download">📥 Download PDF</a>
+    </div>
+</body>
+</html>
