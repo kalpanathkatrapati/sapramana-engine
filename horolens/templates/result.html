@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>HoroLens Result</title>
+  <title>{{ labels.title }}</title>
   <style>
     body { font-family: Arial; margin: 30px; background: #fafafa; }
     table { border-collapse: collapse; width: 70%; margin: 10px 0; }
@@ -11,30 +11,40 @@
   </style>
 </head>
 <body>
-  <h2>🪔 HoroLens Horoscope Report</h2>
-  <p><b>Place:</b> {{ place }}<br>
-     <b>Date & Time:</b> {{ dob }} {{ tob }} ({{ tz }})<br>
-     <b>Lagna:</b> {{ lagna }}</p>
+  <h2>🪔 {{ labels.title }}</h2>
+  <p><b>{{ labels.name }}:</b> {{ name }}<br>
+     <b>Gender:</b> {{ gender | capitalize }}<br>
+     <b>Ayanamsa:</b> {{ ayanamsa | replace('_',' ') | title }}<br>
+     <b>{{ labels.place }}:</b> {{ place }}<br>
+     <b>{{ labels.datetime }}:</b> {{ dob }} {{ tob }} ({{ tz }})<br>
+     <b>{{ labels.lagna }}:</b> {{ lagna }}</p>
 
-  <h2>Planetary Positions</h2>
+  <h2>{{ labels.south_chart }}</h2>
+  {% include '_south_chart.html' with context %}
+
+  <h2>{{ labels.planetary_positions }}</h2>
   <table>
-    <tr><th>Planet</th><th>Longitude (°)</th><th>Sign</th><th>Nakshatra</th></tr>
-    {% for p, lon, sign, nak in planet_table %}
-    <tr><td>{{ p }}</td><td>{{ lon }}</td><td>{{ sign }}</td><td>{{ nak }}</td></tr>
+    <tr><th>{{ labels.name }}</th><th>Position (°')</th><th>{{ labels.sign }}</th><th>{{ labels.nakshatra }}</th></tr>
+    {% for p, pos, sign, nak in planet_table %}
+    <tr><td>{{ p }}</td><td>{{ pos }}</td><td>{{ sign }}</td><td>{{ nak }}</td></tr>
     {% endfor %}
   </table>
 
-  <h2>Rāśi Chart (South Indian Style)</h2>
+  <h2>House Chart</h2>
   <table>
-    <tr><th>Sign</th><th>Planets</th></tr>
-    {% for s in ord %}
-    <tr><td>{{ s }}</td><td>{{ ' '.join(rasi[s]) }}</td></tr>
+    <tr><th>{{ labels.house }}</th><th>{{ labels.sign }}</th><th>{{ labels.grahas }}</th></tr>
+    {% for house in house_chart %}
+    <tr>
+      <td>{{ house.house }}</td>
+      <td>{{ house.sign }}</td>
+      <td>{{ house.occupants | join(', ') }}</td>
+    </tr>
     {% endfor %}
   </table>
 
   <h2>Navāṁśa Chart</h2>
   <table>
-    <tr><th>Sign</th><th>Planets</th></tr>
+    <tr><th>{{ labels.sign }}</th><th>{{ labels.grahas }}</th></tr>
     {% for s in ord %}
     <tr><td>{{ s }}</td><td>{{ ' '.join(nav[s]) }}</td></tr>
     {% endfor %}

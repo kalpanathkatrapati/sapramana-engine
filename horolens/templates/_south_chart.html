@@ -1,0 +1,27 @@
+<!-- South Indian chart partial - expects `chart_context` and `labels` in template context -->
+<link rel="stylesheet" href="{{ url_for('static', filename='south_chart.css') }}">
+<div class="south-chart" role="img" aria-label="South Indian horoscope chart">
+  {% for row in chart_context.rows %}
+  <div class="sc-row">
+    {% for cell in row %}
+      {% if cell.empty %}
+        <div class="sc-cell sc-empty"></div>
+      {% else %}
+        <div class="sc-cell" data-sign="{{ cell.sign }}" tabindex="0">
+          <div class="sc-sign">{{ cell.sign }}{% if cell.is_lagna %}<span class="sc-lagna">L</span>{% endif %}</div>
+          <div class="sc-occupants">
+            {% if cell.occupants %}
+              {% for occ in cell.occupants %}
+                <div class="sc-planet">{{ occ }}</div>
+              {% endfor %}
+            {% else %}
+              <div class="sc-empty-occupant">&nbsp;</div>
+            {% endif %}
+          </div>
+        </div>
+      {% endif %}
+    {% endfor %}
+  </div>
+  {% endfor %}
+</div>
+<script src="{{ url_for('static', filename='south_chart.js') }}" defer></script>
