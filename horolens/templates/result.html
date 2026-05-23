@@ -1,65 +1,254 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>{{ labels.title }}</title>
-  <style>
-    body { font-family: Arial; margin: 30px; background: #fafafa; }
-    table { border-collapse: collapse; width: 70%; margin: 10px 0; }
-    td, th { border: 1px solid #ccc; padding: 6px; text-align: center; }
-    h2 { margin-top: 30px; }
-    a { color: #0078d7; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>{{ chart.labels.title }}</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 30px;
+            background: #f5f5f5;
+            color: #222;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: auto;
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+        }
+
+        h1 {
+            margin-top: 0;
+            color: #8b0000;
+        }
+
+        h2 {
+            margin-top: 40px;
+            border-bottom: 2px solid #ddd;
+            padding-bottom: 8px;
+            color: #444;
+        }
+
+        .summary {
+            line-height: 1.8;
+            font-size: 15px;
+        }
+
+        .summary b {
+            color: #333;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            background: white;
+        }
+
+        th {
+            background: #f0f0f0;
+        }
+
+        td, th {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: center;
+        }
+
+        tr:nth-child(even) {
+            background: #fafafa;
+        }
+
+        .download-btn {
+            display: inline-block;
+            margin-top: 30px;
+            padding: 12px 20px;
+            background: #8b0000;
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: bold;
+        }
+
+        .download-btn:hover {
+            background: #a50000;
+        }
+
+        .dasha-block {
+            margin-bottom: 25px;
+            padding: 15px;
+            background: #fafafa;
+            border-left: 4px solid #8b0000;
+            border-radius: 6px;
+        }
+
+        .antar-list {
+            margin-top: 10px;
+            padding-left: 20px;
+        }
+
+        @media (max-width: 768px) {
+
+            body {
+                padding: 10px;
+            }
+
+            .container {
+                padding: 15px;
+            }
+
+            table {
+                font-size: 13px;
+            }
+        }
+    </style>
 </head>
+
 <body>
-  <h2>🪔 {{ labels.title }}</h2>
-  <p><b>{{ labels.name }}:</b> {{ name }}<br>
-     <b>Gender:</b> {{ gender | capitalize }}<br>
-     <b>Ayanamsa:</b> {{ ayanamsa | replace('_',' ') | title }}<br>
-     <b>{{ labels.place }}:</b> {{ place }}<br>
-     <b>{{ labels.datetime }}:</b> {{ dob }} {{ tob }} ({{ tz }})<br>
-     <b>{{ labels.lagna }}:</b> {{ lagna }}</p>
 
-  <h2>{{ labels.south_chart }}</h2>
-  {% include '_south_chart.html' with context %}
+<div class="container">
 
-  <h2>{{ labels.planetary_positions }}</h2>
-  <table>
-    <tr><th>{{ labels.name }}</th><th>Position (°')</th><th>{{ labels.sign }}</th><th>{{ labels.nakshatra }}</th></tr>
-    {% for p, pos, sign, nak in planet_table %}
-    <tr><td>{{ p }}</td><td>{{ pos }}</td><td>{{ sign }}</td><td>{{ nak }}</td></tr>
+    <h1>🪔 {{ chart.labels.title }}</h1>
+
+    <div class="summary">
+
+        <b>{{ chart.labels.name }}:</b>
+        {{ chart.name }}
+
+        <br>
+
+        <b>Gender:</b>
+        {{ chart.gender | capitalize }}
+
+        <br>
+
+        <b>{{ chart.labels.place }}:</b>
+        {{ chart.place }}
+
+        <br>
+
+        <b>{{ chart.labels.datetime }}:</b>
+        {{ chart.dob }} {{ chart.tob }}
+
+        ({{ chart.timezone }})
+
+        <br>
+
+        <b>{{ chart.labels.lagna }}:</b>
+        {{ chart.lagna }}
+
+    </div>
+
+    <h2>{{ chart.labels.south_chart }}</h2>
+
+    {% set chart_context = chart.chart_context %}
+    {% include '_south_chart.html' %}
+
+    <h2>{{ chart.labels.planetary_positions }}</h2>
+
+    <table>
+
+        <tr>
+            <th>{{ chart.labels.name }}</th>
+            <th>Position</th>
+            <th>{{ chart.labels.sign }}</th>
+            <th>{{ chart.labels.nakshatra }}</th>
+        </tr>
+
+        {% for p, pos, sign, nak in chart.planet_table %}
+
+        <tr>
+            <td>{{ p }}</td>
+            <td>{{ pos }}</td>
+            <td>{{ sign }}</td>
+            <td>{{ nak }}</td>
+        </tr>
+
+        {% endfor %}
+
+    </table>
+
+    <h2>House Chart</h2>
+
+    <table>
+
+        <tr>
+            <th>{{ chart.labels.house }}</th>
+            <th>{{ chart.labels.sign }}</th>
+            <th>{{ chart.labels.grahas }}</th>
+        </tr>
+
+        {% for house in chart.house_chart %}
+
+        <tr>
+            <td>{{ house.house }}</td>
+            <td>{{ house.sign }}</td>
+            <td>{{ house.occupants | join(', ') }}</td>
+        </tr>
+
+        {% endfor %}
+
+    </table>
+
+    <h2>Navāṁśa Chart</h2>
+
+    <table>
+
+        <tr>
+            <th>{{ chart.labels.sign }}</th>
+            <th>{{ chart.labels.grahas }}</th>
+        </tr>
+
+        {% for sign in chart.ordered_signs %}
+
+        <tr>
+            <td>{{ sign }}</td>
+            <td>{{ ' | '.join(chart.navamsa[sign]) }}</td>
+        </tr>
+
+        {% endfor %}
+
+    </table>
+
+    <h2>{{ chart.labels.vimsottari }}</h2>
+
+    {% for maha, start, end, antars in chart.dasha %}
+
+    <div class="dasha-block">
+
+        <b>{{ maha }}</b>
+
+        ({{ start }} → {{ end }})
+
+        <ul class="antar-list">
+
+            {% for sub, s2, e2 in antars %}
+
+            <li>
+                {{ sub }}:
+                {{ s2 }} → {{ e2 }}
+            </li>
+
+            {% endfor %}
+
+        </ul>
+
+    </div>
+
     {% endfor %}
-  </table>
 
-  <h2>House Chart</h2>
-  <table>
-    <tr><th>{{ labels.house }}</th><th>{{ labels.sign }}</th><th>{{ labels.grahas }}</th></tr>
-    {% for house in house_chart %}
-    <tr>
-      <td>{{ house.house }}</td>
-      <td>{{ house.sign }}</td>
-      <td>{{ house.occupants | join(', ') }}</td>
-    </tr>
-    {% endfor %}
-  </table>
+    <a class="download-btn" href="/download">
+        {{ chart.labels.download }}
+    </a>
 
-  <h2>Navāṁśa Chart</h2>
-  <table>
-    <tr><th>{{ labels.sign }}</th><th>{{ labels.grahas }}</th></tr>
-    {% for s in ord %}
-    <tr><td>{{ s }}</td><td>{{ ' '.join(nav[s]) }}</td></tr>
-    {% endfor %}
-  </table>
+</div>
 
-  <h2>Vimśottarī Daśā</h2>
-  {% for maha, start, end, antars in dasha %}
-    <p><b>{{ maha }}</b> ({{ start }} → {{ end }})</p>
-    <ul>
-      {% for sub, s2, e2 in antars %}
-        <li>{{ sub }}: {{ s2 }} → {{ e2 }}</li>
-      {% endfor %}
-    </ul>
-  {% endfor %}
-
-  <br><a href="/download">📄 Download PDF Report</a>
 </body>
 </html>
