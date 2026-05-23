@@ -119,6 +119,13 @@ def result():
         except ValueError:
             return "Invalid date format. Use DD-MMM-YYYY."
 
+    # Convert time to 12-hour format
+    try:
+        time_obj = datetime.strptime(tob, "%H:%M")
+        tob_12h_display = time_obj.strftime("%I:%M %p")
+    except ValueError:
+        tob_12h_display = tob
+
     geo = geocode_place(place)
     if not geo:
         return "Place not found."
@@ -161,6 +168,40 @@ def result():
     lagna_sign = sign_names[lagna]
     rasi[lagna_sign].insert(0, f"ASC {lagna_dms}")
     
+    # Sort planets by degrees (descending) within each sign, keeping ASC at top
+    def sort_occupants(occupants):
+        """Sort occupants: ASC always first, then other planets by decreasing degrees."""
+        asc_entry = None
+        planets = []
+        for occ in occupants:
+            if occ.startswith("ASC"):
+                asc_entry = occ
+            else:
+                planets.append(occ)
+        
+        # Extract degree from planet string (e.g., "Su 16°23'" -> 16)
+        def get_degree(planet_str):
+            try:
+                # Format: "XX d°m'" where XX is planet short name
+                parts = planet_str.split()
+                if len(parts) >= 2:
+                    deg_str = parts[1].split('°')[0]
+                    return int(deg_str)
+            except (ValueError, IndexError):
+                return 0
+            return 0
+        
+        planets.sort(key=get_degree, reverse=True)
+        result = []
+        if asc_entry:
+            result.append(asc_entry)
+        result.extend(planets)
+        return result
+    
+    # Apply sorting to all signs
+    for sign in rasi:
+        rasi[sign] = sort_occupants(rasi[sign])
+    
     ordered = sign_names[lagna:] + sign_names[:lagna]
     house_chart = []
     for index, sign in enumerate(ordered, start=1):
@@ -172,8 +213,8 @@ def result():
     # build a rendering-friendly chart_context for the South Indian chart partial
     chart_context = build_south_chart_context(rasi, sign_names[lagna], sign_names)
 
-    last_data = dict(name=name, gender=gender, place=place, dob=dob_display, tob=tob, tz=tzname,
-                     ayanamsa=ayanamsa, rasi=rasi, nav=navamsa, ord=ordered,
+    last_data = dict(name=name, gender=gender, place=place, dob=dob_display, tob=tob_12h_display, tz=tzname,
+                     rasi=rasi, nav=navamsa, ord=ordered,
                      lagna=sign_names[lagna], dasha=dasha, planet_table=planet_table,
                      house_chart=house_chart, chart_context=chart_context,
                      lang=lang, labels=LABELS_BY_LANG[lang])

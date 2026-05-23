@@ -24,7 +24,7 @@ def compute_vimsottari(moon_lon, birth_dt):
             years = rem
         end = dt + timedelta(days=years*365.25)
         antars = compute_antardasha(lord, dt, end)
-        sequence.append((lord, dt.date(), end.date(), antars))
+        sequence.append((lord, dt.date().strftime("%d-%b-%Y"), end.date().strftime("%d-%b-%Y"), antars))
         lord = DASHA_SEQUENCE[(DASHA_SEQUENCE.index(lord)+1)%9]
         dt = end
     return sequence
@@ -33,10 +33,13 @@ def compute_vimsottari(moon_lon, birth_dt):
 def compute_antardasha(maha_lord, start_dt, end_dt):
     total_days = (end_dt - start_dt).days
     antars=[]
-    for sublord in DASHA_SEQUENCE:
+    # Start antardasha sequence from the Mahadasha lord itself
+    start_index = DASHA_SEQUENCE.index(maha_lord)
+    for i in range(9):
+        sublord = DASHA_SEQUENCE[(start_index + i) % 9]
         proportion = DASHA_YEARS[sublord]/120.0
         days = total_days * proportion
         sub_end = start_dt + timedelta(days=days)
-        antars.append((sublord, start_dt.date(), sub_end.date()))
+        antars.append((sublord, start_dt.date().strftime("%d-%b-%Y"), sub_end.date().strftime("%d-%b-%Y")))
         start_dt = sub_end
     return antars
