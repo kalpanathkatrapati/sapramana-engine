@@ -28,3 +28,16 @@ class Chart:
 
     lang: str = "en"
     labels: dict = field(default_factory=dict)
+
+    def to_dict(self):
+        return self.__dict__
+
+    @classmethod
+    def from_dict(cls, data):
+        chart = cls()
+
+        for key, value in data.items():
+            setattr(chart, key, value)
+
+        return chart
+    

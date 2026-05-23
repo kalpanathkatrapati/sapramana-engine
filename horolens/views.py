@@ -307,8 +307,8 @@ def result():
         sign_names
     )
 
-    session['last_chart_name'] = chart.name
-
+    session['chart_data'] = chart.to_dict()
+    
     return render_template(
         'result.html',
         chart=chart
@@ -317,4 +317,12 @@ def result():
 
 @bp.route('/download')
 def download_pdf():
-    return "PDF route will be refactored in Phase 2"
+
+    chart_data = session.get('chart_data')
+
+    if not chart_data:
+        return "No chart data found."
+
+    chart = Chart.from_dict(chart_data)
+
+    return generate_pdf(chart)
