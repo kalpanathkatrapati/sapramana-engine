@@ -1,0 +1,376 @@
+from datetime import datetime
+
+import pytz
+import swisseph as swe
+
+from horolens.models import Chart
+
+from horolens.astro import (
+    PLANET_SYMBOLS,
+    PLANET_SHORT_NAMES,
+    get_planet_name,
+    get_sign_names,
+    calc_planets,
+    get_nakshatra_name,
+    compute_navamsa,
+    get_ayanamsa,
+    set_sidereal_mode,
+    to_sidereal,
+    degrees_to_dms,
+)
+
+from horolens.chart import build_south_chart_context
+from horolens.dasha import compute_vimsottari
+from horolens.geo import geocode_place, get_timezone
+
+from horolens.services.strength_service import (
+    calculate_all_strengths
+)
+
+LABELS_BY_LANG = {
+    'en': {
+        'title': 'HoroLens Horoscope Report',
+        'name': 'Name',
+        'place': 'Place',
+        'datetime': 'Date & Time',
+        'lagna': 'Lagna',
+        'planetary_positions': 'Planetary Positions',
+        'sign': 'Sign',
+        'nakshatra': 'Nakshatra',
+        'south_chart': 'South Indian Chart',
+        'house': 'House',
+        'grahas': 'Grahas',
+        'vimsottari': 'Vimśottarī Daśā',
+        'download': '📄 Download PDF'
+    },
+    'sa': {
+        'title': 'HoroLens Horoscope Report',
+        'name': 'Name',
+        'place': 'Place',
+        'datetime': 'Date & Time',
+        'lagna': 'Lagna',
+        'planetary_positions': 'Planetary Positions',
+        'sign': 'Sign',
+        'nakshatra': 'Nakshatra',
+        'south_chart': 'South Indian Chart',
+        'house': 'House',
+        'grahas': 'Grahas',
+        'vimsottari': 'Vimśottarī Daśā',
+        'download': '📄 Download PDF'
+    },
+    'te': {
+        'title': 'హరోలెన్స్ జ్యోతిష్య నివేదిక',
+        'name': 'పేరు',
+        'place': 'స్థలం',
+        'datetime': 'తేదీ & సమయం',
+        'lagna': 'లగ్నం',
+        'planetary_positions': 'గ్రహ స్థితులు',
+        'sign': 'రాశి',
+        'nakshatra': 'నక్షత్రం',
+        'south_chart': 'దక్షిణ భారత శైలీ చార్ట్',
+        'house': 'గృహం',
+        'grahas': 'గ్రహాలు',
+        'vimsottari': 'విమ్ శోత్తరి దశా',
+        'download': '📄 PDF డౌన్లోడ్'
+    }
+}
+
+
+# =========================================================
+# HELPERS
+# =========================================================
+
+
+def parse_birth_date(dob_text):
+
+    try:
+        dob = datetime.strptime(dob_text, "%d-%b-%Y")
+        return dob, dob_text
+
+    except ValueError:
+
+        try:
+            dob = datetime.strptime(dob_text, "%Y-%m-%d")
+            return dob, dob.strftime("%d-%b-%Y")
+
+        except ValueError:
+            raise ValueError(
+                "Invalid date format. Use DD-MMM-YYYY."
+            )
+
+
+
+def parse_birth_time(tob):
+
+    try:
+        time_obj = datetime.strptime(tob, "%H:%M")
+        return time_obj.strftime("%I:%M %p")
+
+    except ValueError:
+        return tob
+
+
+
+def sort_occupants(occupants):
+
+    asc_entry = None
+    planets = []
+
+    for occ in occupants:
+
+        if occ.startswith("ASC"):
+            asc_entry = occ
+        else:
+            planets.append(occ)
+
+    def get_degree(planet_str):
+
+        try:
+            parts = planet_str.split()
+
+            if len(parts) >= 2:
+                deg_str = parts[1].split('°')[0]
+                return int(deg_str)
+
+        except (ValueError, IndexError):
+            return 0
+
+        return 0
+
+    planets.sort(
+        key=get_degree,
+        reverse=True
+    )
+
+    result = []
+
+    if asc_entry:
+        result.append(asc_entry)
+
+    result.extend(planets)
+
+    return result
+
+
+# =========================================================
+# MAIN CHART GENERATOR
+# =========================================================
+
+
+def generate_chart(form_data):
+
+    chart = Chart()
+
+    chart.name = form_data.get(
+        'name',
+        'Default'
+    ).strip() or 'Default'
+
+    chart.gender = form_data.get(
+        'gender',
+        'male'
+    )
+
+    if chart.gender not in ('male', 'female'):
+        chart.gender = 'male'
+
+    dob_text = form_data.get(
+        'dob',
+        '01-Jan-1983'
+    ).strip()
+
+    tob = form_data.get(
+        'tob',
+        '05:48'
+    ).strip()
+
+    chart.place = form_data.get(
+        'place',
+        'Chirala, Andhra Pradesh'
+    ).strip()
+
+    chart.lang = form_data.get(
+        'lang',
+        'en'
+    )
+
+    ayanamsa = form_data.get(
+        'ayanamsa',
+        'lahiri'
+    )
+
+    if chart.lang not in LABELS_BY_LANG:
+        chart.lang = 'en'
+
+    chart.labels = LABELS_BY_LANG[chart.lang]
+
+    dob, normalized_dob = parse_birth_date(dob_text)
+
+    chart.dob = normalized_dob
+
+    chart.tob = parse_birth_time(tob)
+
+    geo = geocode_place(chart.place)
+
+    if not geo:
+        raise ValueError("Place not found.")
+
+    lat, lon = geo
+
+    chart.latitude = lat
+    chart.longitude = lon
+
+    tz, tzname = get_timezone(lat, lon)
+
+    chart.timezone = tzname
+
+    local = tz.localize(
+        datetime.strptime(
+            f"{chart.dob} {tob}",
+            "%d-%b-%Y %H:%M"
+        )
+    )
+
+    utc = local.astimezone(pytz.utc)
+
+    jd = swe.julday(
+        utc.year,
+        utc.month,
+        utc.day,
+        utc.hour + utc.minute / 60
+    )
+
+    set_sidereal_mode(ayanamsa)
+
+    swe.set_topo(lon, lat)
+
+    pos = calc_planets(jd)
+
+    ayanamsa_value = get_ayanamsa(jd)
+
+    sign_names = get_sign_names(chart.lang)
+
+    chart.rasi = {
+        s: [] for s in sign_names
+    }
+
+    chart.navamsa = {
+        s: [] for s in sign_names
+    }
+
+    for p, l in pos.items():
+
+        sidereal_lon = to_sidereal(l, jd)
+
+        sign = sign_names[
+            int(sidereal_lon // 30)
+        ]
+
+        nak = get_nakshatra_name(sidereal_lon)
+
+        degree_in_sign = sidereal_lon % 30
+
+        planet_label = get_planet_name(
+            p,
+            chart.lang
+        )
+
+        short_name = PLANET_SHORT_NAMES[p]
+
+        dms_str = degrees_to_dms(
+            degree_in_sign
+        )
+
+        chart.rasi[sign].append(
+            f"{short_name} {dms_str}"
+        )
+
+        chart.navamsa[
+            compute_navamsa(
+                sidereal_lon,
+                chart.lang
+            )
+        ].append(
+            f"{PLANET_SYMBOLS[p]} {planet_label}"
+        )
+
+        chart.planet_table.append(
+            (
+                planet_label,
+                dms_str,
+                sign,
+                nak
+            )
+        )
+
+    houses, ascmc = swe.houses_ex(
+        jd,
+        lat,
+        lon,
+        b'A'
+    )
+
+    sidereal_asc = (
+        ascmc[0] - ayanamsa_value
+    ) % 360
+
+    lagna_index = int(
+        sidereal_asc // 30
+    )
+
+    lagna_degree_in_sign = sidereal_asc % 30
+
+    lagna_dms = degrees_to_dms(
+        lagna_degree_in_sign
+    )
+
+    chart.lagna = sign_names[lagna_index]
+
+    chart.rasi[chart.lagna].insert(
+        0,
+        f"ASC {lagna_dms}"
+    )
+
+    for sign in chart.rasi:
+        chart.rasi[sign] = sort_occupants(
+            chart.rasi[sign]
+        )
+
+    chart.ordered_signs = (
+        sign_names[lagna_index:]
+        + sign_names[:lagna_index]
+    )
+
+    for index, sign in enumerate(
+        chart.ordered_signs,
+        start=1
+    ):
+
+        occupants = chart.rasi[sign]
+
+        chart.house_chart.append({
+            'house': index,
+            'sign': sign,
+            'occupants': occupants
+        })
+
+    chart.dasha = compute_vimsottari(
+        to_sidereal(pos['Moon'], jd),
+        local
+    )
+
+    chart.chart_context = build_south_chart_context(
+        chart.rasi,
+        chart.lagna,
+        sign_names
+    )
+
+    # =====================================================
+    # STRENGTH ENGINE
+    # =====================================================
+
+    chart.strengths = calculate_all_strengths(
+        chart
+    )
+    
+    return chart
