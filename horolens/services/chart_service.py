@@ -270,7 +270,7 @@ def generate_chart(form_data):
 
         degree_in_sign = sidereal_lon % 30
 
-        planet_label = get_planet_name(
+        display_name = get_planet_name(
             p,
             chart.lang
         )
@@ -291,12 +291,12 @@ def generate_chart(form_data):
                 chart.lang
             )
         ].append(
-            f"{PLANET_SYMBOLS[p]} {planet_label}"
+            f"{PLANET_SYMBOLS[p]} {display_name}"
         )
 
         chart.planet_table.append(
             (
-                planet_label,
+                display_name,
                 dms_str,
                 sign,
                 nak

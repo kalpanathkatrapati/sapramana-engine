@@ -162,10 +162,10 @@
             <th>{{ chart.labels.nakshatra }}</th>
         </tr>
 
-        {% for p, pos, sign, nak in chart.planet_table %}
+        {% for display_name, pos, sign, nak in chart.planet_table %}
 
         <tr>
-            <td>{{ p }}</td>
+            <td>{{ display_name }}</td>
             <td>{{ pos }}</td>
             <td>{{ sign }}</td>
             <td>{{ nak }}</td>

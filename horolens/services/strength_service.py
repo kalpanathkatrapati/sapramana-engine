@@ -83,7 +83,7 @@ def calculate_all_strengths(chart):
 
         planet = row[0]
 
-        sign = row[2]
+        sign = row[3]
 
         dignity = calculate_dignity_strength(
             planet,
